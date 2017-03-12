@@ -1,0 +1,3 @@
+[submodule "wp-content/plugins/trave-diary"]
+	path = wp-content/plugins/trave-diary
+	url = https://github.com/zenopioventini/travel-diary.git
