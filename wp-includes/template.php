@@ -7,7 +7,7 @@
  */
 
 /**
- * Retrieve path to a template
+ * Retrieves path to a template.
  *
  * Used to quickly retrieve the path of a template without including the file
  * extension. It will also check the parent theme, if the file exists, with
@@ -16,31 +16,54 @@
  *
  * @since 1.5.0
  *
- * @param string $type      Filename without extension.
- * @param array  $templates An optional list of template candidates
+ * @param string   $type      Filename without extension.
+ * @param string[] $templates An optional list of template candidates.
  * @return string Full path to template file.
  */
 function get_query_template( $type, $templates = array() ) {
 	$type = preg_replace( '|[^a-z0-9-]+|', '', $type );
 
-	if ( empty( $templates ) )
-		$templates = array("{$type}.php");
+	if ( empty( $templates ) ) {
+		$templates = array( "{$type}.php" );
+	}
 
 	/**
 	 * Filters the list of template filenames that are searched for when retrieving a template to use.
 	 *
+	 * The dynamic portion of the hook name, `$type`, refers to the filename -- minus the file
+	 * extension and any non-alphanumeric characters delimiting words -- of the file to load.
 	 * The last element in the array should always be the fallback template for this query type.
 	 *
-	 * Possible values for `$type` include: 'index', '404', 'archive', 'author', 'category', 'tag', 'taxonomy', 'date',
-	 * 'embed', home', 'frontpage', 'page', 'paged', 'search', 'single', 'singular', and 'attachment'.
+	 * Possible hook names include:
+	 *
+	 *  - `404_template_hierarchy`
+	 *  - `archive_template_hierarchy`
+	 *  - `attachment_template_hierarchy`
+	 *  - `author_template_hierarchy`
+	 *  - `category_template_hierarchy`
+	 *  - `date_template_hierarchy`
+	 *  - `embed_template_hierarchy`
+	 *  - `frontpage_template_hierarchy`
+	 *  - `home_template_hierarchy`
+	 *  - `index_template_hierarchy`
+	 *  - `page_template_hierarchy`
+	 *  - `paged_template_hierarchy`
+	 *  - `privacypolicy_template_hierarchy`
+	 *  - `search_template_hierarchy`
+	 *  - `single_template_hierarchy`
+	 *  - `singular_template_hierarchy`
+	 *  - `tag_template_hierarchy`
+	 *  - `taxonomy_template_hierarchy`
 	 *
 	 * @since 4.7.0
 	 *
-	 * @param array $templates A list of template candidates, in descending order of priority.
+	 * @param string[] $templates A list of template candidates, in descending order of priority.
 	 */
 	$templates = apply_filters( "{$type}_template_hierarchy", $templates );
 
 	$template = locate_template( $templates );
+
+	$template = locate_block_template( $template, $type, $templates );
 
 	/**
 	 * Filters the path of the queried template by type.
@@ -49,21 +72,42 @@ function get_query_template( $type, $templates = array() ) {
 	 * extension and any non-alphanumeric characters delimiting words -- of the file to load.
 	 * This hook also applies to various types of files loaded as part of the Template Hierarchy.
 	 *
-	 * Possible values for `$type` include: 'index', '404', 'archive', 'author', 'category', 'tag', 'taxonomy', 'date',
-	 * 'embed', home', 'frontpage', 'page', 'paged', 'search', 'single', 'singular', and 'attachment'.
+	 * Possible hook names include:
+	 *
+	 *  - `404_template`
+	 *  - `archive_template`
+	 *  - `attachment_template`
+	 *  - `author_template`
+	 *  - `category_template`
+	 *  - `date_template`
+	 *  - `embed_template`
+	 *  - `frontpage_template`
+	 *  - `home_template`
+	 *  - `index_template`
+	 *  - `page_template`
+	 *  - `paged_template`
+	 *  - `privacypolicy_template`
+	 *  - `search_template`
+	 *  - `single_template`
+	 *  - `singular_template`
+	 *  - `tag_template`
+	 *  - `taxonomy_template`
 	 *
 	 * @since 1.5.0
+	 * @since 4.8.0 The `$type` and `$templates` parameters were added.
 	 *
-	 * @param string $template Path to the template. See locate_template().
+	 * @param string   $template  Path to the template. See locate_template().
+	 * @param string   $type      Sanitized filename without extension.
+	 * @param string[] $templates A list of template candidates, in descending order of priority.
 	 */
-	return apply_filters( "{$type}_template", $template );
+	return apply_filters( "{$type}_template", $template, $type, $templates );
 }
 
 /**
- * Retrieve path of index template in current or parent template.
+ * Retrieves path of index template in current or parent template.
  *
- * The template hierarchy is filterable via the {@see 'index_template_hierarchy'} hook.
- * The template path is filterable via the {@see 'index_template'} hook.
+ * The template hierarchy and template path are filterable via the {@see '$type_template_hierarchy'}
+ * and {@see '$type_template'} dynamic hooks, where `$type` is 'index'.
  *
  * @since 3.0.0
  *
@@ -72,14 +116,14 @@ function get_query_template( $type, $templates = array() ) {
  * @return string Full path to index template file.
  */
 function get_index_template() {
-	return get_query_template('index');
+	return get_query_template( 'index' );
 }
 
 /**
- * Retrieve path of 404 template in current or parent template.
+ * Retrieves path of 404 template in current or parent template.
  *
- * The template hierarchy is filterable via the {@see '404_template_hierarchy'} hook.
- * The template path is filterable via the {@see '404_template'} hook.
+ * The template hierarchy and template path are filterable via the {@see '$type_template_hierarchy'}
+ * and {@see '$type_template'} dynamic hooks, where `$type` is '404'.
  *
  * @since 1.5.0
  *
@@ -88,14 +132,14 @@ function get_index_template() {
  * @return string Full path to 404 template file.
  */
 function get_404_template() {
-	return get_query_template('404');
+	return get_query_template( '404' );
 }
 
 /**
- * Retrieve path of archive template in current or parent template.
+ * Retrieves path of archive template in current or parent template.
  *
- * The template hierarchy is filterable via the {@see 'archive_template_hierarchy'} hook.
- * The template path is filterable via the {@see 'archive_template'} hook.
+ * The template hierarchy and template path are filterable via the {@see '$type_template_hierarchy'}
+ * and {@see '$type_template'} dynamic hooks, where `$type` is 'archive'.
  *
  * @since 1.5.0
  *
@@ -108,8 +152,8 @@ function get_archive_template() {
 
 	$templates = array();
 
-	if ( count( $post_types ) == 1 ) {
-		$post_type = reset( $post_types );
+	if ( count( $post_types ) === 1 ) {
+		$post_type   = reset( $post_types );
 		$templates[] = "archive-{$post_type}.php";
 	}
 	$templates[] = 'archive.php';
@@ -118,10 +162,10 @@ function get_archive_template() {
 }
 
 /**
- * Retrieve path of post type archive template in current or parent template.
+ * Retrieves path of post type archive template in current or parent template.
  *
- * The template hierarchy is filterable via the {@see 'archive_template_hierarchy'} hook.
- * The template path is filterable via the {@see 'archive_template'} hook.
+ * The template hierarchy and template path are filterable via the {@see '$type_template_hierarchy'}
+ * and {@see '$type_template'} dynamic hooks, where `$type` is 'archive'.
  *
  * @since 3.7.0
  *
@@ -131,18 +175,20 @@ function get_archive_template() {
  */
 function get_post_type_archive_template() {
 	$post_type = get_query_var( 'post_type' );
-	if ( is_array( $post_type ) )
+	if ( is_array( $post_type ) ) {
 		$post_type = reset( $post_type );
+	}
 
 	$obj = get_post_type_object( $post_type );
-	if ( ! $obj->has_archive )
+	if ( ! ( $obj instanceof WP_Post_Type ) || ! $obj->has_archive ) {
 		return '';
+	}
 
 	return get_archive_template();
 }
 
 /**
- * Retrieve path of author template in current or parent template.
+ * Retrieves path of author template in current or parent template.
  *
  * The hierarchy for this template looks like:
  *
@@ -156,8 +202,8 @@ function get_post_type_archive_template() {
  * 2. author-1.php
  * 3. author.php
  *
- * The template hierarchy is filterable via the {@see 'author_template_hierarchy'} hook.
- * The template path is filterable via the {@see 'author_template'} hook.
+ * The template hierarchy and template path are filterable via the {@see '$type_template_hierarchy'}
+ * and {@see '$type_template'} dynamic hooks, where `$type` is 'author'.
  *
  * @since 1.5.0
  *
@@ -180,7 +226,7 @@ function get_author_template() {
 }
 
 /**
- * Retrieve path of category template in current or parent template.
+ * Retrieves path of category template in current or parent template.
  *
  * The hierarchy for this template looks like:
  *
@@ -194,8 +240,8 @@ function get_author_template() {
  * 2. category-2.php
  * 3. category.php
  *
- * The template hierarchy is filterable via the {@see 'category_template_hierarchy'} hook.
- * The template path is filterable via the {@see 'category_template'} hook.
+ * The template hierarchy and template path are filterable via the {@see '$type_template_hierarchy'}
+ * and {@see '$type_template'} dynamic hooks, where `$type` is 'category'.
  *
  * @since 1.5.0
  * @since 4.7.0 The decoded form of `category-{slug}.php` was added to the top of the
@@ -226,7 +272,7 @@ function get_category_template() {
 }
 
 /**
- * Retrieve path of tag template in current or parent template.
+ * Retrieves path of tag template in current or parent template.
  *
  * The hierarchy for this template looks like:
  *
@@ -240,8 +286,8 @@ function get_category_template() {
  * 2. tag-3.php
  * 3. tag.php
  *
- * The template hierarchy is filterable via the {@see 'tag_template_hierarchy'} hook.
- * The template path is filterable via the {@see 'tag_template'} hook.
+ * The template hierarchy and template path are filterable via the {@see '$type_template_hierarchy'}
+ * and {@see '$type_template'} dynamic hooks, where `$type` is 'tag'.
  *
  * @since 2.3.0
  * @since 4.7.0 The decoded form of `tag-{slug}.php` was added to the top of the
@@ -272,26 +318,29 @@ function get_tag_template() {
 }
 
 /**
- * Retrieve path of custom taxonomy term template in current or parent template.
+ * Retrieves path of custom taxonomy term template in current or parent template.
  *
  * The hierarchy for this template looks like:
  *
  * 1. taxonomy-{taxonomy_slug}-{term_slug}.php
- * 2. taxonomy-{taxonomy_slug}.php
- * 3. taxonomy.php
+ * 2. taxonomy-{taxonomy_slug}-{term_id}.php
+ * 3. taxonomy-{taxonomy_slug}.php
+ * 4. taxonomy.php
  *
  * An example of this is:
  *
  * 1. taxonomy-location-texas.php
- * 2. taxonomy-location.php
- * 3. taxonomy.php
+ * 2. taxonomy-location-67.php
+ * 3. taxonomy-location.php
+ * 4. taxonomy.php
  *
- * The template hierarchy is filterable via the {@see 'taxonomy_template_hierarchy'} hook.
- * The template path is filterable via the {@see 'taxonomy_template'} hook.
+ * The template hierarchy and template path are filterable via the {@see '$type_template_hierarchy'}
+ * and {@see '$type_template'} dynamic hooks, where `$type` is 'taxonomy'.
  *
  * @since 2.5.0
  * @since 4.7.0 The decoded form of `taxonomy-{taxonomy_slug}-{term_slug}.php` was added to the top of the
  *              template hierarchy when the term slug contains multibyte characters.
+ * @since 6.9.0 Added `taxonomy-{taxonomy_slug}-{term_id}.php` to the hierarchy.
  *
  * @see get_query_template()
  *
@@ -311,6 +360,7 @@ function get_taxonomy_template() {
 		}
 
 		$templates[] = "taxonomy-$taxonomy-{$term->slug}.php";
+		$templates[] = "taxonomy-$taxonomy-{$term->term_id}.php";
 		$templates[] = "taxonomy-$taxonomy.php";
 	}
 	$templates[] = 'taxonomy.php';
@@ -319,10 +369,10 @@ function get_taxonomy_template() {
 }
 
 /**
- * Retrieve path of date template in current or parent template.
+ * Retrieves path of date template in current or parent template.
  *
- * The template hierarchy is filterable via the {@see 'date_template_hierarchy'} hook.
- * The template path is filterable via the {@see 'date_template'} hook.
+ * The template hierarchy and template path are filterable via the {@see '$type_template_hierarchy'}
+ * and {@see '$type_template'} dynamic hooks, where `$type` is 'date'.
  *
  * @since 1.5.0
  *
@@ -331,14 +381,14 @@ function get_taxonomy_template() {
  * @return string Full path to date template file.
  */
 function get_date_template() {
-	return get_query_template('date');
+	return get_query_template( 'date' );
 }
 
 /**
- * Retrieve path of home template in current or parent template.
+ * Retrieves path of home template in current or parent template.
  *
- * The template hierarchy is filterable via the {@see 'home_template_hierarchy'} hook.
- * The template path is filterable via the {@see 'home_template'} hook.
+ * The template hierarchy and template path are filterable via the {@see '$type_template_hierarchy'}
+ * and {@see '$type_template'} dynamic hooks, where `$type` is 'home'.
  *
  * @since 1.5.0
  *
@@ -353,10 +403,10 @@ function get_home_template() {
 }
 
 /**
- * Retrieve path of front page template in current or parent template.
+ * Retrieves path of front page template in current or parent template.
  *
- * The template hierarchy is filterable via the {@see 'frontpage_template_hierarchy'} hook.
- * The template path is filterable via the {@see 'frontpage_template'} hook.
+ * The template hierarchy and template path are filterable via the {@see '$type_template_hierarchy'}
+ * and {@see '$type_template'} dynamic hooks, where `$type` is 'frontpage'.
  *
  * @since 3.0.0
  *
@@ -365,13 +415,33 @@ function get_home_template() {
  * @return string Full path to front page template file.
  */
 function get_front_page_template() {
-	$templates = array('front-page.php');
+	$templates = array( 'front-page.php' );
 
-	return get_query_template( 'front_page', $templates );
+	return get_query_template( 'frontpage', $templates );
 }
 
 /**
- * Retrieve path of page template in current or parent template.
+ * Retrieves path of Privacy Policy page template in current or parent template.
+ *
+ * The template hierarchy and template path are filterable via the {@see '$type_template_hierarchy'}
+ * and {@see '$type_template'} dynamic hooks, where `$type` is 'privacypolicy'.
+ *
+ * @since 5.2.0
+ *
+ * @see get_query_template()
+ *
+ * @return string Full path to privacy policy template file.
+ */
+function get_privacy_policy_template() {
+	$templates = array( 'privacy-policy.php' );
+
+	return get_query_template( 'privacypolicy', $templates );
+}
+
+/**
+ * Retrieves path of page template in current or parent template.
+ *
+ * Note: For block themes, use locate_block_template() function instead.
  *
  * The hierarchy for this template looks like:
  *
@@ -387,8 +457,8 @@ function get_front_page_template() {
  * 3. page-4.php
  * 4. page.php
  *
- * The template hierarchy is filterable via the {@see 'page_template_hierarchy'} hook.
- * The template path is filterable via the {@see 'page_template'} hook.
+ * The template hierarchy and template path are filterable via the {@see '$type_template_hierarchy'}
+ * and {@see '$type_template'} dynamic hooks, where `$type` is 'page'.
  *
  * @since 1.5.0
  * @since 4.7.0 The decoded form of `page-{page_name}.php` was added to the top of the
@@ -399,39 +469,45 @@ function get_front_page_template() {
  * @return string Full path to page template file.
  */
 function get_page_template() {
-	$id = get_queried_object_id();
+	$id       = get_queried_object_id();
 	$template = get_page_template_slug();
-	$pagename = get_query_var('pagename');
+	$pagename = get_query_var( 'pagename' );
 
 	if ( ! $pagename && $id ) {
-		// If a static page is set as the front page, $pagename will not be set. Retrieve it from the queried object
+		/*
+		 * If a static page is set as the front page, $pagename will not be set.
+		 * Retrieve it from the queried object.
+		 */
 		$post = get_queried_object();
-		if ( $post )
+		if ( $post ) {
 			$pagename = $post->post_name;
+		}
 	}
 
 	$templates = array();
-	if ( $template && 0 === validate_file( $template ) )
+	if ( $template && 0 === validate_file( $template ) ) {
 		$templates[] = $template;
+	}
 	if ( $pagename ) {
 		$pagename_decoded = urldecode( $pagename );
 		if ( $pagename_decoded !== $pagename ) {
 			$templates[] = "page-{$pagename_decoded}.php";
 		}
-		$templates[] = "page-$pagename.php";
+		$templates[] = "page-{$pagename}.php";
 	}
-	if ( $id )
-		$templates[] = "page-$id.php";
+	if ( $id ) {
+		$templates[] = "page-{$id}.php";
+	}
 	$templates[] = 'page.php';
 
 	return get_query_template( 'page', $templates );
 }
 
 /**
- * Retrieve path of search template in current or parent template.
+ * Retrieves path of search template in current or parent template.
  *
- * The template hierarchy is filterable via the {@see 'search_template_hierarchy'} hook.
- * The template path is filterable via the {@see 'search_template'} hook.
+ * The template hierarchy and template path are filterable via the {@see '$type_template_hierarchy'}
+ * and {@see '$type_template'} dynamic hooks, where `$type` is 'search'.
  *
  * @since 1.5.0
  *
@@ -440,11 +516,11 @@ function get_page_template() {
  * @return string Full path to search template file.
  */
 function get_search_template() {
-	return get_query_template('search');
+	return get_query_template( 'search' );
 }
 
 /**
- * Retrieve path of single template in current or parent template. Applies to single Posts,
+ * Retrieves path of single template in current or parent template. Applies to single Posts,
  * single Attachments, and single custom post types.
  *
  * The hierarchy for this template looks like:
@@ -461,14 +537,14 @@ function get_search_template() {
  * 3. single-post.php
  * 4. single.php
  *
- * The template hierarchy is filterable via the {@see 'single_template_hierarchy'} hook.
- * The template path is filterable via the {@see 'single_template'} hook.
+ * The template hierarchy and template path are filterable via the {@see '$type_template_hierarchy'}
+ * and {@see '$type_template'} dynamic hooks, where `$type` is 'single'.
  *
  * @since 1.5.0
  * @since 4.4.0 `single-{post_type}-{post_name}.php` was added to the top of the template hierarchy.
  * @since 4.7.0 The decoded form of `single-{post_type}-{post_name}.php` was added to the top of the
  *              template hierarchy when the post name contains multibyte characters.
- * @since 4.7.0 {Post Type Template}.php was added to the top of the template hierarchy.
+ * @since 4.7.0 `{Post Type Template}.php` was added to the top of the template hierarchy.
  *
  * @see get_query_template()
  *
@@ -494,7 +570,7 @@ function get_single_template() {
 		$templates[] = "single-{$object->post_type}.php";
 	}
 
-	$templates[] = "single.php";
+	$templates[] = 'single.php';
 
 	return get_query_template( 'single', $templates );
 }
@@ -514,8 +590,8 @@ function get_single_template() {
  * 2. embed-post.php
  * 3. embed.php
  *
- * The template hierarchy is filterable via the {@see 'embed_template_hierarchy'} hook.
- * The template path is filterable via the {@see 'embed_template'} hook.
+ * The template hierarchy and template path are filterable via the {@see '$type_template_hierarchy'}
+ * and {@see '$type_template'} dynamic hooks, where `$type` is 'embed'.
  *
  * @since 4.5.0
  *
@@ -536,7 +612,7 @@ function get_embed_template() {
 		$templates[] = "embed-{$object->post_type}.php";
 	}
 
-	$templates[] = "embed.php";
+	$templates[] = 'embed.php';
 
 	return get_query_template( 'embed', $templates );
 }
@@ -544,21 +620,21 @@ function get_embed_template() {
 /**
  * Retrieves the path of the singular template in current or parent template.
  *
- * The template hierarchy is filterable via the {@see 'singular_template_hierarchy'} hook.
- * The template path is filterable via the {@see 'singular_template'} hook.
+ * The template hierarchy and template path are filterable via the {@see '$type_template_hierarchy'}
+ * and {@see '$type_template'} dynamic hooks, where `$type` is 'singular'.
  *
  * @since 4.3.0
  *
  * @see get_query_template()
  *
- * @return string Full path to singular template file
+ * @return string Full path to singular template file.
  */
 function get_singular_template() {
 	return get_query_template( 'singular' );
 }
 
 /**
- * Retrieve path of attachment template in current or parent template.
+ * Retrieves path of attachment template in current or parent template.
  *
  * The hierarchy for this template looks like:
  *
@@ -574,15 +650,13 @@ function get_singular_template() {
  * 3. image.php
  * 4. attachment.php
  *
- * The template hierarchy is filterable via the {@see 'attachment_template_hierarchy'} hook.
- * The template path is filterable via the {@see 'attachment_template'} hook.
+ * The template hierarchy and template path are filterable via the {@see '$type_template_hierarchy'}
+ * and {@see '$type_template'} dynamic hooks, where `$type` is 'attachment'.
  *
  * @since 2.0.0
  * @since 4.3.0 The order of the mime type logic was reversed so the hierarchy is more logical.
  *
  * @see get_query_template()
- *
- * @global array $posts
  *
  * @return string Full path to attachment template file.
  */
@@ -592,7 +666,7 @@ function get_attachment_template() {
 	$templates = array();
 
 	if ( $attachment ) {
-		if ( false !== strpos( $attachment->post_mime_type, '/' ) ) {
+		if ( str_contains( $attachment->post_mime_type, '/' ) ) {
 			list( $type, $subtype ) = explode( '/', $attachment->post_mime_type );
 		} else {
 			list( $type, $subtype ) = array( $attachment->post_mime_type, '' );
@@ -610,28 +684,60 @@ function get_attachment_template() {
 }
 
 /**
- * Retrieve the name of the highest priority template file that exists.
+ * Set up the globals used for template loading.
  *
- * Searches in the STYLESHEETPATH before TEMPLATEPATH and wp-includes/theme-compat
- * so that themes which inherit from a parent theme can just overload one file.
+ * @since 6.5.0
+ *
+ * @global string $wp_stylesheet_path Path to current theme's stylesheet directory.
+ * @global string $wp_template_path   Path to current theme's template directory.
+ */
+function wp_set_template_globals() {
+	global $wp_stylesheet_path, $wp_template_path;
+
+	$wp_stylesheet_path = get_stylesheet_directory();
+	$wp_template_path   = get_template_directory();
+}
+
+/**
+ * Retrieves the name of the highest priority template file that exists.
+ *
+ * Searches in the stylesheet directory before the template directory and
+ * wp-includes/theme-compat so that themes which inherit from a parent theme
+ * can just overload one file.
  *
  * @since 2.7.0
+ * @since 5.5.0 The `$args` parameter was added.
+ *
+ * @global string $wp_stylesheet_path Path to current theme's stylesheet directory.
+ * @global string $wp_template_path   Path to current theme's template directory.
  *
  * @param string|array $template_names Template file(s) to search for, in order.
  * @param bool         $load           If true the template file will be loaded if it is found.
- * @param bool         $require_once   Whether to require_once or require. Default true. Has no effect if $load is false.
+ * @param bool         $load_once      Whether to require_once or require. Has no effect if `$load` is false.
+ *                                     Default true.
+ * @param array        $args           Optional. Additional arguments passed to the template.
+ *                                     Default empty array.
  * @return string The template filename if one is located.
  */
-function locate_template($template_names, $load = false, $require_once = true ) {
+function locate_template( $template_names, $load = false, $load_once = true, $args = array() ) {
+	global $wp_stylesheet_path, $wp_template_path;
+
+	if ( ! isset( $wp_stylesheet_path ) || ! isset( $wp_template_path ) ) {
+		wp_set_template_globals();
+	}
+
+	$is_child_theme = is_child_theme();
+
 	$located = '';
 	foreach ( (array) $template_names as $template_name ) {
-		if ( !$template_name )
+		if ( ! $template_name ) {
 			continue;
-		if ( file_exists(STYLESHEETPATH . '/' . $template_name)) {
-			$located = STYLESHEETPATH . '/' . $template_name;
+		}
+		if ( file_exists( $wp_stylesheet_path . '/' . $template_name ) ) {
+			$located = $wp_stylesheet_path . '/' . $template_name;
 			break;
-		} elseif ( file_exists(TEMPLATEPATH . '/' . $template_name) ) {
-			$located = TEMPLATEPATH . '/' . $template_name;
+		} elseif ( $is_child_theme && file_exists( $wp_template_path . '/' . $template_name ) ) {
+			$located = $wp_template_path . '/' . $template_name;
 			break;
 		} elseif ( file_exists( ABSPATH . WPINC . '/theme-compat/' . $template_name ) ) {
 			$located = ABSPATH . WPINC . '/theme-compat/' . $template_name;
@@ -639,40 +745,53 @@ function locate_template($template_names, $load = false, $require_once = true ) 
 		}
 	}
 
-	if ( $load && '' != $located )
-		load_template( $located, $require_once );
+	if ( $load && '' !== $located ) {
+		load_template( $located, $load_once, $args );
+	}
 
 	return $located;
 }
 
 /**
- * Require the template file with WordPress environment.
+ * Requires the template file with WordPress environment.
  *
  * The globals are set up for the template file to ensure that the WordPress
  * environment is available from within the function. The query variables are
  * also available.
  *
  * @since 1.5.0
+ * @since 5.5.0 The `$args` parameter was added.
  *
  * @global array      $posts
- * @global WP_Post    $post
+ * @global WP_Post    $post          Global post object.
  * @global bool       $wp_did_header
- * @global WP_Query   $wp_query
- * @global WP_Rewrite $wp_rewrite
- * @global wpdb       $wpdb
+ * @global WP_Query   $wp_query      WordPress Query object.
+ * @global WP_Rewrite $wp_rewrite    WordPress rewrite component.
+ * @global wpdb       $wpdb          WordPress database abstraction object.
  * @global string     $wp_version
- * @global WP         $wp
+ * @global WP         $wp            Current WordPress environment instance.
  * @global int        $id
- * @global WP_Comment $comment
+ * @global WP_Comment $comment       Global comment object.
  * @global int        $user_ID
  *
  * @param string $_template_file Path to template file.
- * @param bool   $require_once   Whether to require_once or require. Default true.
+ * @param bool   $load_once      Whether to require_once or require. Default true.
+ * @param array  $args           Optional. Additional arguments passed to the template.
+ *                               Default empty array.
  */
-function load_template( $_template_file, $require_once = true ) {
+function load_template( $_template_file, $load_once = true, $args = array() ) {
 	global $posts, $post, $wp_did_header, $wp_query, $wp_rewrite, $wpdb, $wp_version, $wp, $id, $comment, $user_ID;
 
 	if ( is_array( $wp_query->query_vars ) ) {
+		/*
+		 * This use of extract() cannot be removed. There are many possible ways that
+		 * templates could depend on variables that it creates existing, and no way to
+		 * detect and deprecate it.
+		 *
+		 * Passing the EXTR_SKIP flag is the safest option, ensuring globals and
+		 * function variables cannot be overwritten.
+		 */
+		// phpcs:ignore WordPress.PHP.DontExtract.extract_extract
 		extract( $wp_query->query_vars, EXTR_SKIP );
 	}
 
@@ -680,9 +799,319 @@ function load_template( $_template_file, $require_once = true ) {
 		$s = esc_attr( $s );
 	}
 
-	if ( $require_once ) {
-		require_once( $_template_file );
+	/**
+	 * Fires before a template file is loaded.
+	 *
+	 * @since 6.1.0
+	 *
+	 * @param string $_template_file The full path to the template file.
+	 * @param bool   $load_once      Whether to require_once or require.
+	 * @param array  $args           Additional arguments passed to the template.
+	 */
+	do_action( 'wp_before_load_template', $_template_file, $load_once, $args );
+
+	if ( $load_once ) {
+		require_once $_template_file;
 	} else {
-		require( $_template_file );
+		require $_template_file;
 	}
+
+	/**
+	 * Fires after a template file is loaded.
+	 *
+	 * @since 6.1.0
+	 *
+	 * @param string $_template_file The full path to the template file.
+	 * @param bool   $load_once      Whether to require_once or require.
+	 * @param array  $args           Additional arguments passed to the template.
+	 */
+	do_action( 'wp_after_load_template', $_template_file, $load_once, $args );
+}
+
+/**
+ * Checks whether the template should be output buffered for enhancement.
+ *
+ * By default, an output buffer is only started if a {@see 'wp_template_enhancement_output_buffer'} filter has been
+ * added by the time a template is included at the {@see 'wp_before_include_template'} action. This allows template
+ * responses to be streamed as much as possible when no template enhancements are registered to apply.
+ *
+ * @since 6.9.0
+ *
+ * @return bool Whether the template should be output-buffered for enhancement.
+ */
+function wp_should_output_buffer_template_for_enhancement(): bool {
+	/**
+	 * Filters whether the template should be output-buffered for enhancement.
+	 *
+	 * By default, an output buffer is only started if a {@see 'wp_template_enhancement_output_buffer'} filter has been
+	 * added or if a plugin has added a {@see 'wp_finalized_template_enhancement_output_buffer'} action. For this
+	 * default to apply, either of the hooks must be added by the time the template is included at the
+	 * {@see 'wp_before_include_template'} action. This allows template responses to be streamed unless the there is
+	 * code which depends on an output buffer being opened. This filter allows a site to opt in to adding such template
+	 * enhancement filters later during the rendering of the template.
+	 *
+	 * @since 6.9.0
+	 *
+	 * @param bool $use_output_buffer Whether an output buffer is started.
+	 */
+	return (bool) apply_filters( 'wp_should_output_buffer_template_for_enhancement', has_filter( 'wp_template_enhancement_output_buffer' ) || has_action( 'wp_finalized_template_enhancement_output_buffer' ) );
+}
+
+/**
+ * Starts the template enhancement output buffer.
+ *
+ * This function is called immediately before the template is included.
+ *
+ * @since 6.9.0
+ *
+ * @return bool Whether the output buffer successfully started.
+ */
+function wp_start_template_enhancement_output_buffer(): bool {
+	if ( ! wp_should_output_buffer_template_for_enhancement() ) {
+		return false;
+	}
+
+	$started = ob_start(
+		'wp_finalize_template_enhancement_output_buffer',
+		0, // Unlimited buffer size so that entire output is passed to the filter.
+		/*
+		 * Instead of the default PHP_OUTPUT_HANDLER_STDFLAGS (cleanable, flushable, and removable) being used for
+		 * flags, the PHP_OUTPUT_HANDLER_FLUSHABLE flag must be omitted. If the buffer were flushable, then each time
+		 * that ob_flush() is called, a fragment of the output would be sent into the output buffer callback. This
+		 * output buffer is intended to capture the entire response for processing, as indicated by the chunk size of 0.
+		 * So the buffer does not allow flushing to ensure the entire buffer can be processed, such as for optimizing an
+		 * entire HTML document, where markup in the HEAD may need to be adjusted based on markup that appears late in
+		 * the BODY.
+		 *
+		 * If this ends up being problematic, then PHP_OUTPUT_HANDLER_FLUSHABLE could be added to the $flags and the
+		 * output buffer callback could check if the phase is PHP_OUTPUT_HANDLER_FLUSH and abort any subsequent
+		 * processing while also emitting a _doing_it_wrong().
+		 *
+		 * The output buffer needs to be removable because WordPress calls wp_ob_end_flush_all() and then calls
+		 * wp_cache_close(). If the buffers are not all flushed before wp_cache_close() is closed, then some output buffer
+		 * handlers (e.g. for caching plugins) may fail to be able to store the page output in the object cache.
+		 * See <https://github.com/WordPress/performance/pull/1317#issuecomment-2271955356>.
+		 */
+		PHP_OUTPUT_HANDLER_STDFLAGS ^ PHP_OUTPUT_HANDLER_FLUSHABLE
+	);
+
+	if ( $started ) {
+		/**
+		 * Fires when the template enhancement output buffer has started.
+		 *
+		 * @since 6.9.0
+		 */
+		do_action( 'wp_template_enhancement_output_buffer_started' );
+	}
+
+	return $started;
+}
+
+/**
+ * Finalizes the template enhancement output buffer.
+ *
+ * Checks to see if the output buffer is complete and contains HTML. If so, runs the content through
+ * the `wp_template_enhancement_output_buffer` filter.  If not, the original content is returned.
+ *
+ * @since 6.9.0
+ *
+ * @see wp_start_template_enhancement_output_buffer()
+ *
+ * @param string $output Output buffer.
+ * @param int    $phase  Phase.
+ * @return string Finalized output buffer.
+ */
+function wp_finalize_template_enhancement_output_buffer( string $output, int $phase ): string {
+	// When the output is being cleaned (e.g. pending template is replaced with error page), do not send it through the filter.
+	if ( ( $phase & PHP_OUTPUT_HANDLER_CLEAN ) !== 0 ) {
+		return $output;
+	}
+
+	// Detect if the response is an HTML content type.
+	$is_html_content_type = null;
+	$html_content_types   = array( 'text/html', 'application/xhtml+xml' );
+	foreach ( headers_list() as $header ) {
+		$header_parts = explode( ':', strtolower( $header ), 2 );
+		if (
+			count( $header_parts ) === 2 &&
+			'content-type' === $header_parts[0]
+		) {
+			/*
+			 * This is looking for very specific content types, therefore it
+			 * doesn’t need to fully parse the header’s value. Instead, it needs
+			 * only assert that the content type is one of the static HTML types.
+			 *
+			 * Example:
+			 *
+			 *     Content-Type: text/html; charset=utf8
+			 *     Content-Type: text/html  ;charset=latin4
+			 *     Content-Type:application/xhtml+xml
+			 */
+			$media_type           = trim( strtok( $header_parts[1], ';' ), " \t" );
+			$is_html_content_type = in_array( $media_type, $html_content_types, true );
+			break; // PHP only sends the first Content-Type header in the list.
+		}
+	}
+	if ( null === $is_html_content_type ) {
+		$is_html_content_type = in_array( ini_get( 'default_mimetype' ), $html_content_types, true );
+	}
+
+	// If the content type is not HTML, short-circuit since it is not relevant for enhancement.
+	if ( ! $is_html_content_type ) {
+		/** This action is documented in wp-includes/template.php */
+		do_action( 'wp_finalized_template_enhancement_output_buffer', $output );
+		return $output;
+	}
+
+	$filtered_output = $output;
+
+	$did_just_catch = false;
+
+	$error_log = array();
+	set_error_handler(
+		static function ( int $level, string $message, ?string $file = null, ?int $line = null ) use ( &$error_log, &$did_just_catch ) {
+			// Switch a user error to an exception so that it can be caught and the buffer can be returned.
+			if ( E_USER_ERROR === $level ) {
+				throw new Exception( __( 'User error triggered:' ) . ' ' . $message );
+			}
+
+			// Display a caught exception as an error since it prevents any of the output buffer filters from applying.
+			if ( $did_just_catch ) { // @phpstan-ignore if.alwaysFalse (The variable is set in the catch block below.)
+				$level = E_USER_ERROR;
+			}
+
+			// Capture a reported error to be displayed by appending to the processed output buffer if display_errors is enabled.
+			if ( error_reporting() & $level ) {
+				$error_log[] = compact( 'level', 'message', 'file', 'line' );
+			}
+			return false;
+		}
+	);
+	$original_display_errors = ini_get( 'display_errors' );
+	if ( $original_display_errors ) {
+		ini_set( 'display_errors', 0 );
+	}
+
+	try {
+		/**
+		 * Filters the template enhancement output buffer prior to sending to the client.
+		 *
+		 * This filter only applies the HTML output of an included template. This filter is a progressive enhancement
+		 * intended for applications such as optimizing markup to improve frontend page load performance. Sites must not
+		 * depend on this filter applying since they may opt to stream the responses instead. Callbacks for this filter
+		 * are highly discouraged from using regular expressions to do any kind of replacement on the output. Use the
+		 * HTML API (either `WP_HTML_Tag_Processor` or `WP_HTML_Processor`), or else use {@see DOM\HtmlDocument} as of
+		 * PHP 8.4 which fully supports HTML5.
+		 *
+		 * Do not print any output during this filter. While filters normally don't print anything, this is especially
+		 * important since this applies during an output buffer callback. Prior to PHP 8.5, the output will be silently
+		 * omitted, whereas afterward a deprecation notice will be emitted.
+		 *
+		 * Important: Because this filter is applied inside an output buffer callback (i.e. display handler), any
+		 * callbacks added to the filter must not attempt to start their own output buffers. Otherwise, PHP will raise a
+		 * fatal error: "Cannot use output buffering in output buffering display handlers."
+		 *
+		 * @since 6.9.0
+		 *
+		 * @param string $filtered_output HTML template enhancement output buffer.
+		 * @param string $output          Original HTML template output buffer.
+		 */
+		$filtered_output = (string) apply_filters( 'wp_template_enhancement_output_buffer', $filtered_output, $output );
+	} catch ( Throwable $throwable ) {
+		// Emit to the error log as a warning not as an error to prevent halting execution.
+		$did_just_catch = true;
+		trigger_error(
+			sprintf(
+				/* translators: %s is the throwable class name */
+				__( 'Uncaught "%s" thrown:' ),
+				get_class( $throwable )
+			) . ' ' . $throwable->getMessage(),
+			E_USER_WARNING
+		);
+		$did_just_catch = false;
+	}
+
+	try {
+		/**
+		 * Fires after the template enhancement output buffer has been finalized.
+		 *
+		 * This happens immediately before the template enhancement output buffer is flushed. No output may be printed
+		 * at this action; prior to PHP 8.5, the output will be silently omitted, whereas afterward a deprecation notice
+		 * will be emitted. Nevertheless, HTTP headers may be sent, which makes this action complimentary to the
+		 * {@see 'send_headers'} action, in which headers may be sent before the template has started rendering. In
+		 * contrast, this `wp_finalized_template_enhancement_output_buffer` action is the possible point at which HTTP
+		 * headers can be sent. This action does not fire if the "template enhancement output buffer" was not started.
+		 * This output buffer is automatically started if this action is added before
+		 * {@see wp_start_template_enhancement_output_buffer()} runs at the {@see 'wp_before_include_template'} action
+		 * with priority 1000. Before this point, the output buffer will also be started automatically if there was a
+		 * {@see 'wp_template_enhancement_output_buffer'} filter added, or if the
+		 * {@see 'wp_should_output_buffer_template_for_enhancement'} filter is made to return `true`.
+		 *
+		 * Important: Because this action fires inside an output buffer callback (i.e. display handler), any callbacks
+		 * added to the action must not attempt to start their own output buffers. Otherwise, PHP will raise a fatal
+		 * error: "Cannot use output buffering in output buffering display handlers."
+		 *
+		 * @since 6.9.0
+		 *
+		 * @param string $output Finalized output buffer.
+		 */
+		do_action( 'wp_finalized_template_enhancement_output_buffer', $filtered_output );
+	} catch ( Throwable $throwable ) {
+		// Emit to the error log as a warning not as an error to prevent halting execution.
+		$did_just_catch = true;
+		trigger_error(
+			sprintf(
+				/* translators: %s is the class name */
+				__( 'Uncaught "%s" thrown:' ),
+				get_class( $throwable )
+			) . ' ' . $throwable->getMessage(),
+			E_USER_WARNING
+		);
+		$did_just_catch = false;
+	}
+
+	// Append any errors to be displayed before returning flushing the buffer.
+	if ( $original_display_errors && 'stderr' !== $original_display_errors ) {
+		foreach ( $error_log as $error ) {
+			switch ( $error['level'] ) {
+				case E_USER_NOTICE:
+					$type = 'Notice';
+					break;
+				case E_USER_DEPRECATED:
+					$type = 'Deprecated';
+					break;
+				case E_USER_WARNING:
+					$type = 'Warning';
+					break;
+				default:
+					$type = 'Error';
+			}
+
+			if ( ini_get( 'html_errors' ) ) {
+				/*
+				 * Adapted from PHP internals: <https://github.com/php/php-src/blob/a979e9f897a90a580e883b1f39ce5673686ffc67/main/main.c#L1478>.
+				 * The self-closing tags are a vestige of the XHTML past!
+				 */
+				$format = "%s<br />\n<b>%s</b>:  %s in <b>%s</b> on line <b>%s</b><br />\n%s";
+			} else {
+				// Adapted from PHP internals: <https://github.com/php/php-src/blob/a979e9f897a90a580e883b1f39ce5673686ffc67/main/main.c#L1492>.
+				$format = "%s\n%s: %s in %s on line %s\n%s";
+			}
+			$filtered_output .= sprintf(
+				$format,
+				ini_get( 'error_prepend_string' ),
+				$type,
+				$error['message'],
+				$error['file'],
+				$error['line'],
+				ini_get( 'error_append_string' )
+			);
+		}
+
+		ini_set( 'display_errors', $original_display_errors );
+	}
+
+	restore_error_handler();
+
+	return $filtered_output;
 }
