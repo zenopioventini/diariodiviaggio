@@ -1,7 +1,14 @@
 <?php get_header(); ?>
 
-	<!-- Hero: immagine in evidenza del viaggio -->
-	<?php if ( has_post_thumbnail() ) : ?>
+	<!-- Hero: Video o Immagine in evidenza -->
+	<?php 
+	$video_url = get_post_meta( get_the_ID(), '_td_featured_video', true );
+	if ( ! empty( $video_url ) ) : 
+	?>
+		<div class="single-hero td-responsive-video-wrap">
+			<?php echo wp_oembed_get( $video_url ); ?>
+		</div>
+	<?php elseif ( has_post_thumbnail() ) : ?>
 		<?php the_post_thumbnail( 'ddv-hero', array( 'class' => 'single-hero' ) ); ?>
 	<?php endif; ?>
 
@@ -39,6 +46,14 @@
 						<?php the_content(); ?>
 						<!-- Il plugin inietta qui: mappa aggregata + statistiche + lista tappe -->
 					</div>
+
+					<?php 
+					// Galleria fotografica del Viaggio
+					$gallery_path = WP_PLUGIN_DIR . '/trave-diary/public/partials/travel-diary-gallery.php';
+					if ( file_exists( $gallery_path ) ) {
+						include $gallery_path;
+					}
+					?>
 
 				</article>
 
