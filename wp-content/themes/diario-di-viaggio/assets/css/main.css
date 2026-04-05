@@ -465,3 +465,106 @@ p { margin-bottom: 1.2em; }
 	.main-nav.is-open { display: block; }
 	.main-nav ul { flex-direction: column; }
 }
+
+/* ── Layout a 2 Colonne (Tappa/Viaggio) ── */
+.td-breadcrumb {
+	display: inline-block;
+	font-size: 0.85rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: #d4943a;
+	background: rgba(212, 148, 58, 0.1);
+	padding: 6px 14px;
+	border-radius: 20px;
+	margin-bottom: 16px;
+	transition: background 0.2s, color 0.2s;
+}
+.td-breadcrumb:hover {
+	background: #d4943a;
+	color: #1a1a1a;
+}
+
+.td-entry-layout {
+	display: flex;
+	align-items: flex-start;
+	gap: 64px;
+	margin-bottom: 64px;
+}
+
+.td-entry-main-col {
+	flex: 1;
+	min-width: 0; /* previene traboccamento orizzontale */
+}
+
+.td-entry-sidebar-col {
+	width: 340px;
+	flex-shrink: 0;
+	position: sticky;
+	top: 100px; /* offset da header */
+}
+
+.td-sticky-box {
+	background: #252525;
+	border: 1px solid #333;
+	border-radius: 12px;
+	padding: 24px;
+	box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+}
+
+.td-sidebar-title {
+	font-size: 1.1rem;
+	margin-top: 0;
+	margin-bottom: 20px;
+	border-bottom: 1px solid #333;
+	padding-bottom: 12px;
+	color: #fff;
+	font-family: 'Inter', sans-serif;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+.td-metrics-list {
+	list-style: none;
+	padding: 0;
+	margin: 0 0 20px 0;
+}
+.td-metrics-list li {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	margin-bottom: 12px;
+	font-size: 0.95rem;
+	color: #bbb;
+}
+.td-metrics-list li:last-child { margin-bottom: 0; }
+.td-metrics-icon {
+	font-size: 1.1rem;
+	margin-top: 2px;
+}
+.td-metrics-val { flex: 1; }
+.td-metrics-val strong { color: #f5f0e8; }
+
+.td-sidebar-minimap-placeholder {
+	background: #1e1e1e;
+	border: 1px solid #333;
+	border-radius: 8px;
+	overflow: hidden;
+	margin-bottom: 0;
+}
+
+.td-entry-footer-sections {
+	border-top: 1px solid #333;
+	padding-top: 48px;
+}
+
+@media (max-width: 900px) {
+	.td-entry-layout {
+		flex-direction: column;
+		gap: 40px;
+	}
+	.td-entry-sidebar-col {
+		width: 100%;
+		position: static;
+	}
+}
