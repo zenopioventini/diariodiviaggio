@@ -1,2 +1,6 @@
 /.project
 /wp-config.php
+
+wp-content/uploads/
+
+wp-content/debug.log
