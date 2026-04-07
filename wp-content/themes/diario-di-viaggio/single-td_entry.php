@@ -106,15 +106,45 @@ get_header(); ?>
 									<?php endif; ?>
 								</ul>
 
-								<!-- Minimappa statica se presente pos (In futuro Leaflet MiniMap qui) -->
-								<?php if ($map && isset($map['lat']) && isset($map['lng'])) : ?>
-									<div class="td-sidebar-minimap-placeholder">
-										<p style="text-align:center; padding: 40px 0; color:#666; font-size:0.8rem;">
-											<span class="dashicons dashicons-location" style="font-size:2rem;width:2rem;height:2rem;display:block;margin:0 auto 10px;color:#d4943a;"></span>
-											Mappa Posizione<br>
-											<small><?php echo esc_html($map['lat'] . ' / ' . $map['lng']); ?></small>
-										</p>
+								<!-- Minimappa (In futuro Leaflet MiniMap qui) -->
+								<?php 
+								$map_data = array();
+								if ($map && isset($map['lat']) && isset($map['lng'])) {
+									$map_data[] = array(
+										'lat' => floatval($map['lat']),
+										'lng' => floatval($map['lng']),
+										'title' => get_the_title(),
+										'url'   => '',
+										'type'  => 'entry'
+									);
+								}
+
+								// Aggiunta EXIF della tappa
+								if (class_exists('Travel_Diary_Exif') && class_exists('Travel_Diary_Gallery')) {
+									if (!Travel_Diary_Exif::is_disabled($entry_id)) {
+										$gallery = Travel_Diary_Gallery::get_gallery_ids($entry_id);
+										foreach ($gallery as $attachment_id) {
+											$coords = Travel_Diary_Exif::get_coords($attachment_id);
+											if ($coords) {
+												$thumb = wp_get_attachment_image_url($attachment_id, 'thumbnail');
+												$map_data[] = array(
+													'lat'   => $coords['lat'],
+													'lng'   => $coords['lng'],
+													'title' => 'Foto #' . $attachment_id,
+													'url'   => '',
+													'type'  => 'photo',
+													'thumb' => $thumb
+												);
+											}
+										}
+									}
+								}
+
+								if (!empty($map_data)) : ?>
+									<div id="td-entry-map" class="td-sidebar-minimap-placeholder" style="margin-top:20px; height:250px; background:#111;">
+										<!-- Mappa Leaflet -->
 									</div>
+									<script>var tdTripMapData = <?php echo json_encode($map_data); ?>;</script>
 								<?php endif; ?>
 
 							</div>

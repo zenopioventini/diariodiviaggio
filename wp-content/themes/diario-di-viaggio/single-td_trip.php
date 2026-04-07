@@ -65,6 +65,24 @@ if ($entries && is_array($entries)) {
 		}
 	}
 }
+
+// Integrazione EXIF Fotografico: aggiungiamo in coda all'array $map_data 
+// i punti derivanti da TUTTE le foto del viaggio
+if (class_exists('Travel_Diary_Exif')) {
+	$exif_markers = Travel_Diary_Exif::get_trip_map_markers($trip_id); // rimosso il true
+	if (!empty($exif_markers)) {
+		foreach ($exif_markers as $em) {
+			$map_data[] = array(
+				'lat'   => $em['lat'],
+				'lng'   => $em['lng'],
+				'title' => 'Foto #'. $em['id'],
+				'url'   => '',
+				'type'  => 'photo',
+				'thumb' => $em['thumb']
+			);
+		}
+	}
+}
 ?>
 
 	<!-- Hero: Video o Immagine in evidenza -->
@@ -187,11 +205,8 @@ if ($entries && is_array($entries)) {
 
 								<!-- Minimappa placeholder global -->
 								<?php if (!empty($map_data)) : ?>
-									<div class="td-sidebar-minimap-placeholder" style="margin-top:24px;">
-										<p style="text-align:center; padding: 40px 0; color:#666; font-size:0.8rem;">
-											<span class="dashicons dashicons-admin-site-alt3" style="font-size:2rem;width:2rem;height:2rem;display:block;margin:0 auto 10px;color:#d4943a;"></span>
-											Mappa Globale Viaggio
-										</p>
+									<div id="td-trip-map" class="td-sidebar-minimap-placeholder" style="margin-top:24px; height: 350px; background:#111;">
+										<!-- Leaflet verrà renderizzato qui -->
 									</div>
 									<script>var tdTripMapData = <?php echo json_encode($map_data); ?>;</script>
 								<?php endif; ?>
