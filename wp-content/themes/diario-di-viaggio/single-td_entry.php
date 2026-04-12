@@ -27,8 +27,8 @@ get_header(); ?>
 
 			<?php while ( have_posts() ) : the_post(); 
 				$entry_id   = get_the_ID();
-				$arrival    = get_field('field_entry_arrivo', $entry_id);
-				$departure  = get_field('field_entry_partenza', $entry_id);
+				$arrival    = get_field('field_entry_data_principale', $entry_id);
+				$departure  = get_field('field_entry_data_fine', $entry_id);
 				$map        = get_field('field_entry_posizione', $entry_id);
 				$km_reali   = get_field('field_entry_km_reali', $entry_id);
 				$mezzo      = get_field('field_entry_mezzo_trasporto', $entry_id);
@@ -69,8 +69,8 @@ get_header(); ?>
 						<?php the_title( '<h1 class="entry-title" style="font-size:clamp(2.5rem, 5vw, 4rem); margin: 16px 0;">', '</h1>' ); ?>
 						
 						<div class="entry-meta" style="justify-content: center; font-size: 0.95rem;">
-							<span><span class="dashicons dashicons-calendar-alt"></span> <?php echo get_the_date(); ?></span>
-							<span><span class="dashicons dashicons-edit"></span> <?php the_author(); ?></span>
+							<span><?php echo Travel_Diary_Icons::get('calendar', ['width'=>16,'height'=>16,'class'=>'td-inline-icon']); ?> <?php echo get_the_date(); ?></span>
+							<span><?php echo Travel_Diary_Icons::get('user', ['width'=>16,'height'=>16,'class'=>'td-inline-icon']); ?> <?php the_author(); ?></span>
 						</div>
 					</header>
 
@@ -90,79 +90,99 @@ get_header(); ?>
 								<h3 class="td-sidebar-title">Board di Tappa</h3>
 								
 								<ul class="td-metrics-list">
-									<?php if ($arrival): ?>
-										<li><span class="td-metrics-icon">📥</span> <div class="td-metrics-val"><strong>Arrivo:</strong> <?php echo esc_html($arrival); ?></div></li>
-									<?php endif; ?>
-									<?php if ($departure): ?>
-										<li><span class="td-metrics-icon">📤</span> <div class="td-metrics-val"><strong>Partenza:</strong> <?php echo esc_html($departure); ?></div></li>
+									<?php if ($arrival): 
+										// Calcolo la stringa di visualizzazione
+										$date_str = date_i18n('d/m/Y', strtotime($arrival));
+										if (strpos($arrival, ':') !== false && !$departure) {
+											$date_str = date_i18n('d/m/Y H:i', strtotime($arrival));
+										}
+										if ($departure) {
+											$date_str .= ' - ' . date_i18n('d/m/Y', strtotime($departure));
+										}
+									?>
+										<li><span class="td-metrics-icon"><?php echo Travel_Diary_Icons::get('calendar'); ?></span> <div class="td-metrics-val"><strong>Data/e:</strong> <?php echo esc_html($date_str); ?></div></li>
 									<?php endif; ?>
 									<?php if ($mezzo): ?>
-										<li><span class="td-metrics-icon">🚗</span> <div class="td-metrics-val"><strong>Mezzo:</strong> <?php echo esc_html($mezzo); ?></div></li>
+										<li><span class="td-metrics-icon"><?php echo Travel_Diary_Icons::get($mezzo); ?></span> <div class="td-metrics-val"><strong>Mezzo:</strong> <?php echo esc_html(ucfirst($mezzo)); ?></div></li>
 									<?php endif; ?>
 									<?php if ($meteo): ?>
-										<li><span class="td-metrics-icon">☀️</span> <div class="td-metrics-val"><strong>Meteo:</strong> <?php echo esc_html($meteo); ?></div></li>
+										<li><span class="td-metrics-icon"><?php echo Travel_Diary_Icons::get($meteo); ?></span> <div class="td-metrics-val"><strong>Meteo:</strong> <?php echo esc_html(ucfirst(str_replace('_', ' ', $meteo))); ?></div></li>
 									<?php endif; ?>
 									<?php if ($valutaz): ?>
-										<li><span class="td-metrics-icon">⭐</span> <div class="td-metrics-val"><strong>Voto:</strong> <?php echo esc_html($valutaz); ?> su 5</div></li>
+										<li><span class="td-metrics-icon"><?php echo Travel_Diary_Icons::get('star'); ?></span> <div class="td-metrics-val"><strong>Voto:</strong> <?php echo esc_html($valutaz); ?> su 5</div></li>
 									<?php endif; ?>
 									<?php if ($km_reali): ?>
-										<li><span class="td-metrics-icon">🗺️</span> <div class="td-metrics-val"><strong>Percorsi:</strong> <?php echo esc_html($km_reali); ?> km</div></li>
+										<li><span class="td-metrics-icon"><?php echo Travel_Diary_Icons::get('map-pin'); ?></span> <div class="td-metrics-val"><strong>Percorsi:</strong> <?php echo esc_html($km_reali); ?> km</div></li>
 									<?php endif; ?>
 								</ul>
 
 								<!-- Minimappa (In futuro Leaflet MiniMap qui) -->
 								<?php 
 								$map_data = array();
+
+								// 1. Posizione principale della tappa (ACF google_map)
 								if ($map && isset($map['lat']) && isset($map['lng'])) {
 									$map_data[] = array(
-										'lat' => floatval($map['lat']),
-										'lng' => floatval($map['lng']),
+										'lat'   => floatval($map['lat']),
+										'lng'   => floatval($map['lng']),
 										'title' => get_the_title(),
 										'url'   => '',
 										'type'  => 'entry'
 									);
 								}
 
-								// Aggiunta EXIF della tappa
-								if (class_exists('Travel_Diary_Exif') && class_exists('Travel_Diary_Gallery')) {
-									if (!Travel_Diary_Exif::is_disabled($entry_id)) {
-										$gallery = Travel_Diary_Gallery::get_gallery_ids($entry_id);
-										foreach ($gallery as $attachment_id) {
-											$coords = Travel_Diary_Exif::get_coords($attachment_id);
-											if ($coords) {
-												$thumb = wp_get_attachment_image_url($attachment_id, 'thumbnail');
-												$map_data[] = array(
-													'lat'   => $coords['lat'],
-													'lng'   => $coords['lng'],
-													'title' => 'Foto #' . $attachment_id,
-													'url'   => '',
-													'type'  => 'photo',
-													'thumb' => $thumb
-												);
-											}
-										}
-									}
-								}
-
-								// Aggiunta POI (Punti di Interesse) della Tappa
+								// 2. POI della Tappa: coordinate a cascata
+								//    1) Campo google_map 'posizione' (manuale)
+								//    2) EXIF dell'immagine del POI (automatico)
+								//    3) Nessuna coordinata → POI escluso dalla mappa
 								if (function_exists('get_field')) {
 									$poi_list = get_field('field_entry_poi_list', $entry_id);
 									if (!empty($poi_list)) {
 										foreach ($poi_list as $poi) {
+											$poi_lat   = null;
+											$poi_lng   = null;
+											$poi_thumb = '';
+
+											// Thumbnail dell'immagine POI (comune a entrambi i percorsi)
+											$poi_img_id = $poi['immagine'] ?? 0;
+											if ($poi_img_id) {
+												$poi_thumb = wp_get_attachment_image_url($poi_img_id, 'thumbnail') ?: '';
+											}
+
+											// Priorità 1: coordinate manuali dal campo google_map
 											$pos = $poi['posizione'] ?? null;
 											if (!empty($pos) && isset($pos['lat']) && isset($pos['lng'])) {
-												$map_data[] = array(
-													'lat'   => floatval($pos['lat']),
-													'lng'   => floatval($pos['lng']),
-													'title' => esc_html($poi['titolo'] ?? 'POI'),
-													'url'   => '',
-													'type'  => 'poi',
-													'thumb' => ''
-												);
+												$poi_lat = floatval($pos['lat']);
+												$poi_lng = floatval($pos['lng']);
 											}
+											// Priorità 2: EXIF GPS dall'immagine del POI
+											elseif ($poi_img_id && class_exists('Travel_Diary_Exif')) {
+												$exif = Travel_Diary_Exif::get_coords($poi_img_id);
+												if ($exif) {
+													$poi_lat = $exif['lat'];
+													$poi_lng = $exif['lng'];
+												}
+											}
+
+											// Nessuna coordinata → salta questo POI
+											if ($poi_lat === null || $poi_lng === null) continue;
+
+											$map_data[] = array(
+												'lat'   => $poi_lat,
+												'lng'   => $poi_lng,
+												'title' => esc_html($poi['titolo'] ?? 'POI'),
+												'url'   => '',
+												'type'  => 'poi',
+												'thumb' => $poi_thumb,
+												'cat'   => esc_html($poi['categoria'] ?? ''),
+											);
 										}
 									}
 								}
+
+								// Nota: le foto EXIF della gallery NON vengono aggiunte alla mappa
+								// della singola tappa (già visibili in galleria più sotto).
+								// Vengono invece usate nella mappa globale del Viaggio.
 
 								if (!empty($map_data)) : ?>
 									<div id="td-entry-map" class="td-sidebar-minimap-placeholder" style="margin-top:20px; height:250px; background:#111;">

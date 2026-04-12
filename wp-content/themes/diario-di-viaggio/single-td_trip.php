@@ -73,13 +73,13 @@ if ($entries && is_array($entries)) {
 // Integrazione EXIF Fotografico: aggiungiamo in coda all'array $map_data 
 // i punti derivanti da TUTTE le foto del viaggio
 if (class_exists('Travel_Diary_Exif')) {
-	$exif_markers = Travel_Diary_Exif::get_trip_map_markers($trip_id); // rimosso il true
+	$exif_markers = Travel_Diary_Exif::get_trip_map_markers($trip_id);
 	if (!empty($exif_markers)) {
 		foreach ($exif_markers as $em) {
 			$map_data[] = array(
 				'lat'   => $em['lat'],
 				'lng'   => $em['lng'],
-				'title' => 'Foto #'. $em['id'],
+				'title' => $em['title'] ?? 'Foto', // alt text o nome file da get_trip_map_markers()
 				'url'   => '',
 				'type'  => 'photo',
 				'thumb' => $em['thumb']
@@ -131,8 +131,8 @@ if (class_exists('Travel_Diary_Exif')) {
 						<?php the_title( '<h1 class="entry-title" style="font-size:clamp(2.5rem, 5vw, 4rem); margin: 16px 0;">', '</h1>' ); ?>
 
 						<div class="entry-meta" style="justify-content: center; font-size: 0.95rem;">
-							<span><span class="dashicons dashicons-calendar-alt"></span> <?php echo get_the_date(); ?></span>
-							<span><span class="dashicons dashicons-edit"></span> <?php the_author(); ?></span>
+							<span><?php echo Travel_Diary_Icons::get('calendar', ['width'=>16,'height'=>16,'class'=>'td-inline-icon']); ?> <?php echo get_the_date(); ?></span>
+							<span><?php echo Travel_Diary_Icons::get('user', ['width'=>16,'height'=>16,'class'=>'td-inline-icon']); ?> <?php the_author(); ?></span>
 						</div>
 					</header>
 
@@ -153,18 +153,27 @@ if (class_exists('Travel_Diary_Exif')) {
 									foreach ($entries as $entry_id) :
 										$entry    = get_post($entry_id);
 										if (!$entry || $entry->post_status !== 'publish') continue;
-										$date     = get_field('field_entry_arrivo', $entry_id);
-										$mezzo    = get_field('field_entry_mezzo_trasporto', $entry_id);
-										$km_r     = get_field('field_entry_km_reali', $entry_id);
-										$excerpt  = has_excerpt($entry_id) ? get_the_excerpt($entry_id) : wp_trim_words(strip_tags(get_post_field('post_content', $entry_id)), 20);
+										$date_main = get_field('field_entry_data_principale', $entry_id);
+										$date_end  = get_field('field_entry_data_fine', $entry_id);
+										$mezzo     = get_field('field_entry_mezzo_trasporto', $entry_id);
+										$km_r      = get_field('field_entry_km_reali', $entry_id);
+										$excerpt   = has_excerpt($entry_id) ? get_the_excerpt($entry_id) : wp_trim_words(strip_tags(get_post_field('post_content', $entry_id)), 20);
+										
+										$date_str = '';
+										if ($date_main) {
+											$date_str = date_i18n('d/m/Y', strtotime($date_main));
+											if ($date_end) {
+												$date_str .= ' - ' . date_i18n('d/m/Y', strtotime($date_end));
+											}
+										}
 									?>
 										<a href="<?php echo esc_url(get_permalink($entry_id) . $token_query); ?>" style="display:block; padding:20px; background:#252525; border:1px solid #333; border-radius:8px; text-decoration:none; color:inherit; transition:transform 0.2s, box-shadow 0.2s;">
 											<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
 												<h4 style="margin:0; font-size:1.2rem; color:#f5f0e8;"><span style="color:#d4943a; margin-right:8px;"><?php echo $count; ?>.</span> <?php echo esc_html($entry->post_title); ?></h4>
 												<div style="font-size:0.85rem; color:#888; display:flex; gap:15px;">
-													<?php if ($date)  echo '<span>📅 ' . esc_html($date) . '</span>'; ?>
-													<?php if ($mezzo) echo '<span>' . esc_html($mezzo) . '</span>'; ?>
-													<?php if ($km_r)  echo '<span>📍 ' . esc_html($km_r) . ' km</span>'; ?>
+													<?php if ($date_str)  echo '<span>' . Travel_Diary_Icons::get('calendar', ['width'=>14,'height'=>14,'class'=>'td-inline-icon']) . ' ' . esc_html($date_str) . '</span>'; ?>
+													<?php if ($mezzo) echo '<span>' . Travel_Diary_Icons::get($mezzo, ['width'=>14,'height'=>14,'class'=>'td-inline-icon']) . ' ' . esc_html(ucfirst($mezzo)) . '</span>'; ?>
+													<?php if ($km_r)  echo '<span>' . Travel_Diary_Icons::get('map-pin', ['width'=>14,'height'=>14,'class'=>'td-inline-icon']) . ' ' . esc_html($km_r) . ' km</span>'; ?>
 												</div>
 											</div>
 											<?php if ($excerpt) : ?>
@@ -185,23 +194,23 @@ if (class_exists('Travel_Diary_Exif')) {
 								
 								<ul class="td-metrics-list">
 									<li>
-										<span class="td-metrics-icon">📍</span>
+										<span class="td-metrics-icon"><?php echo Travel_Diary_Icons::get('map-pin'); ?></span>
 										<div class="td-metrics-val"><strong>Tappe:</strong> <?php echo count($entries ?: []); ?></div>
 									</li>
 									<?php if ($km_totali_reali > 0) : ?>
 										<li>
-											<span class="td-metrics-icon">🛣️</span>
+											<span class="td-metrics-icon"><?php echo Travel_Diary_Icons::get('auto'); ?></span>
 											<div class="td-metrics-val"><strong>Km percorsi:</strong> <?php echo number_format($km_totali_reali, 0, ',', '.'); ?></div>
 										</li>
 									<?php elseif ($km_totali_stimati > 0) : ?>
 										<li>
-											<span class="td-metrics-icon">📐</span>
+											<span class="td-metrics-icon"><?php echo Travel_Diary_Icons::get('auto'); ?></span>
 											<div class="td-metrics-val"><strong>Km stimati:</strong> <?php echo number_format($km_totali_stimati, 0, ',', '.'); ?></div>
 										</li>
 									<?php endif; ?>
 									<?php if ($costo_totale > 0) : ?>
 										<li>
-											<span class="td-metrics-icon">💶</span>
+											<span class="td-metrics-icon"><?php echo Travel_Diary_Icons::get('euro'); ?></span>
 											<div class="td-metrics-val"><strong style="color:var(--td-accent,#d4943a);">Spesa Totale:</strong> € <?php echo number_format($costo_totale, 2, ',', '.'); ?></div>
 										</li>
 									<?php endif; ?>
