@@ -146,15 +146,14 @@ get_header(); ?>
 
 								// Aggiunta POI (Punti di Interesse) della Tappa
 								if (function_exists('get_field')) {
-									$poi_list = get_field('td_poi_list', $entry_id);
+									$poi_list = get_field('field_entry_poi_list', $entry_id);
 									if (!empty($poi_list)) {
 										foreach ($poi_list as $poi) {
-											$lat = $poi['latitudine'] ?? '';
-											$lng = $poi['longitudine'] ?? '';
-											if (!empty($lat) && !empty($lng)) {
+											$pos = $poi['posizione'] ?? null;
+											if (!empty($pos) && isset($pos['lat']) && isset($pos['lng'])) {
 												$map_data[] = array(
-													'lat'   => floatval($lat),
-													'lng'   => floatval($lng),
+													'lat'   => floatval($pos['lat']),
+													'lng'   => floatval($pos['lng']),
 													'title' => esc_html($poi['titolo'] ?? 'POI'),
 													'url'   => '',
 													'type'  => 'poi',
