@@ -5,6 +5,10 @@
  */
 get_header();
 
+$current_token = isset($_GET['token']) ? sanitize_text_field($_GET['token']) : '';
+$token_query   = $current_token ? '?token=' . urlencode($current_token) : '';
+
+
 // Funzione Haversine (spostata qui provvisoriamente oppure gia' disponibile se chiamata dal partial, 
 // ma raddoppiandola o spostandola e' più sicuro, usiamo class-travel-diary.php? No, definiamo una lambda).
 if (!function_exists('td_haversine')) {
@@ -154,7 +158,7 @@ if (class_exists('Travel_Diary_Exif')) {
 										$km_r     = get_field('field_entry_km_reali', $entry_id);
 										$excerpt  = has_excerpt($entry_id) ? get_the_excerpt($entry_id) : wp_trim_words(strip_tags(get_post_field('post_content', $entry_id)), 20);
 									?>
-										<a href="<?php echo esc_url(get_permalink($entry_id)); ?>" style="display:block; padding:20px; background:#252525; border:1px solid #333; border-radius:8px; text-decoration:none; color:inherit; transition:transform 0.2s, box-shadow 0.2s;">
+										<a href="<?php echo esc_url(get_permalink($entry_id) . $token_query); ?>" style="display:block; padding:20px; background:#252525; border:1px solid #333; border-radius:8px; text-decoration:none; color:inherit; transition:transform 0.2s, box-shadow 0.2s;">
 											<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
 												<h4 style="margin:0; font-size:1.2rem; color:#f5f0e8;"><span style="color:#d4943a; margin-right:8px;"><?php echo $count; ?>.</span> <?php echo esc_html($entry->post_title); ?></h4>
 												<div style="font-size:0.85rem; color:#888; display:flex; gap:15px;">
@@ -203,13 +207,7 @@ if (class_exists('Travel_Diary_Exif')) {
 									<?php endif; ?>
 								</ul>
 
-								<!-- Minimappa placeholder global -->
-								<?php if (!empty($map_data)) : ?>
-									<div id="td-trip-map" class="td-sidebar-minimap-placeholder" style="margin-top:24px; height: 350px; background:#111;">
-										<!-- Leaflet verrà renderizzato qui -->
-									</div>
-									<script>var tdTripMapData = <?php echo json_encode($map_data); ?>;</script>
-								<?php endif; ?>
+								<!-- Minimappa global spostata in basso -->
 
 							</div>
 						</aside>
@@ -218,6 +216,14 @@ if (class_exists('Travel_Diary_Exif')) {
 
 					<!-- Sezioni Larghe (Full Width) -->
 					<div class="td-entry-footer-sections">
+						
+						<?php if (!empty($map_data)) : ?>
+							<div id="td-trip-map" class="td-sidebar-minimap-placeholder" style="margin-top:0; height: 500px; background:#111; border-radius: 8px; margin-bottom:48px;">
+								<!-- Leaflet verrà renderizzato qui -->
+							</div>
+							<script>var tdTripMapData = <?php echo json_encode($map_data); ?>;</script>
+						<?php endif; ?>
+
 						<?php 
 						// Galleria fotografica del Viaggio
 						$gallery_path = WP_PLUGIN_DIR . '/trave-diary/public/partials/travel-diary-gallery.php';

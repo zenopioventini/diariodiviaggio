@@ -55,8 +55,12 @@ get_header(); ?>
 
 					<!-- Header della Tappa -->
 					<header class="entry-header" style="text-align: center; max-width: 800px; margin: 0 auto 48px;">
-						<?php if ( $parent_trip ) : ?>
-							<a href="<?php echo esc_url(get_permalink($parent_trip->ID)); ?>" class="td-breadcrumb">
+						<?php 
+						if ( $parent_trip ) : 
+							$current_token = isset($_GET['token']) ? sanitize_text_field($_GET['token']) : '';
+							$token_query   = $current_token ? '?token=' . urlencode($current_token) : '';
+						?>
+							<a href="<?php echo esc_url(get_permalink($parent_trip->ID) . $token_query); ?>" class="td-breadcrumb">
 								<span class="dashicons dashicons-arrow-left-alt" style="vertical-align:middle;"></span> 
 								<?php echo esc_html($parent_trip->post_title); ?>
 							</a>
@@ -99,7 +103,7 @@ get_header(); ?>
 										<li><span class="td-metrics-icon">☀️</span> <div class="td-metrics-val"><strong>Meteo:</strong> <?php echo esc_html($meteo); ?></div></li>
 									<?php endif; ?>
 									<?php if ($valutaz): ?>
-										<li><span class="td-metrics-icon">⭐</span> <div class="td-metrics-val"><strong>Voto:</strong> <?php echo esc_html($valutaz); ?></div></li>
+										<li><span class="td-metrics-icon">⭐</span> <div class="td-metrics-val"><strong>Voto:</strong> <?php echo esc_html($valutaz); ?> su 5</div></li>
 									<?php endif; ?>
 									<?php if ($km_reali): ?>
 										<li><span class="td-metrics-icon">🗺️</span> <div class="td-metrics-val"><strong>Percorsi:</strong> <?php echo esc_html($km_reali); ?> km</div></li>
@@ -134,6 +138,27 @@ get_header(); ?>
 													'url'   => '',
 													'type'  => 'photo',
 													'thumb' => $thumb
+												);
+											}
+										}
+									}
+								}
+
+								// Aggiunta POI (Punti di Interesse) della Tappa
+								if (function_exists('get_field')) {
+									$poi_list = get_field('td_poi_list', $entry_id);
+									if (!empty($poi_list)) {
+										foreach ($poi_list as $poi) {
+											$lat = $poi['latitudine'] ?? '';
+											$lng = $poi['longitudine'] ?? '';
+											if (!empty($lat) && !empty($lng)) {
+												$map_data[] = array(
+													'lat'   => floatval($lat),
+													'lng'   => floatval($lng),
+													'title' => esc_html($poi['titolo'] ?? 'POI'),
+													'url'   => '',
+													'type'  => 'poi',
+													'thumb' => ''
 												);
 											}
 										}
