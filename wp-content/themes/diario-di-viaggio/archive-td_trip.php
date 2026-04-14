@@ -20,6 +20,37 @@ get_header(); ?>
 
 <main id="main" class="site-main">
 	<div class="container container--wide">
+
+		<!-- Barra Ricerca -->
+		<div class="td-search-bar" style="background:#222; padding:20px; border-radius:8px; margin-bottom:30px; display:flex; gap:15px; flex-wrap:wrap; align-items:center;">
+			<form method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>" style="display:flex; width:100%; gap:15px; margin:0; flex-wrap:wrap;">
+				<input type="hidden" name="post_type" value="td_trip">
+				
+				<div style="flex-grow:1; min-width:200px;">
+					<input type="search" name="s" placeholder="Cerca itinerari, nazioni, descrizioni..." value="<?php echo get_search_query(); ?>" style="width:100%; padding:10px 15px; border-radius:4px; border:1px solid #444; background:#111; color:#fff; font-size:1rem;">
+				</div>
+				
+				<div style="min-width:200px;">
+					<?php 
+					wp_dropdown_categories( array(
+						'show_option_all' => 'Tutte le tipologie',
+						'taxonomy'        => 'td_trip_cat',
+						'name'            => 'td_trip_cat',
+						'value_field'     => 'slug',
+						'selected'        => isset( $_GET['td_trip_cat'] ) ? sanitize_text_field( $_GET['td_trip_cat'] ) : '',
+						'class'           => 'td-filter-select',
+					) ); 
+					?>
+				</div>
+				
+				<button type="submit" style="padding:10px 25px; background:var(--td-accent,#d4943a); color:#1a1a1a; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">Cerca</button>
+			</form>
+		</div>
+
+		<?php if ( is_search() ) : ?>
+			<h2 style="margin-bottom:20px; font-size:1.5rem; color:#fff;">Risultati di ricerca per: "<?php echo get_search_query(); ?>"</h2>
+		<?php endif; ?>
+
 		<?php if ( have_posts() ) : ?>
 
 			<div class="trips-grid">
@@ -51,6 +82,19 @@ get_header(); ?>
 		<?php endif; ?>
 	</div>
 </main>
+
+<style>
+.td-filter-select {
+	width: 100%;
+	padding: 10px 15px;
+	border-radius: 4px;
+	border: 1px solid #444;
+	background: #111;
+	color: #fff;
+	font-size: 1rem;
+	appearance: auto;
+}
+</style>
 
 <?php
 get_footer();
