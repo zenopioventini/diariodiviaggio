@@ -70,7 +70,11 @@ get_header(); ?>
 						
 						<div class="entry-meta" style="justify-content: center; font-size: 0.95rem;">
 							<span><?php echo Travel_Diary_Icons::get('calendar', ['width'=>16,'height'=>16,'class'=>'td-inline-icon']); ?> <?php echo get_the_date(); ?></span>
-							<span><?php echo Travel_Diary_Icons::get('user', ['width'=>16,'height'=>16,'class'=>'td-inline-icon']); ?> <?php the_author(); ?></span>
+							<span><?php echo Travel_Diary_Icons::get('user', ['width'=>16,'height'=>16,'class'=>'td-inline-icon']); ?>
+								<a href="<?php echo esc_url( get_author_posts_url( get_the_author_meta( 'ID' ) ) ); ?>" style="color:inherit; text-decoration:none; border-bottom:1px dotted currentColor;">
+									<?php the_author(); ?>
+								</a>
+							</span>
 						</div>
 					</header>
 

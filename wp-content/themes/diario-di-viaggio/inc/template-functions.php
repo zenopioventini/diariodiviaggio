@@ -50,6 +50,7 @@ function ddv_trip_card() {
 				<?php if ( $cat_name ) : ?>
 					<span><?php echo esc_html( $cat_name ); ?></span>
 				<?php endif; ?>
+				<span><a href="<?php echo esc_url( get_author_posts_url( get_the_author_meta( 'ID' ) ) ); ?>" style="color:inherit; text-decoration:none; border-bottom:1px dotted currentColor;"><?php the_author(); ?></a></span>
 				<?php if ( $n_tappe > 0 ) : ?>
 					<span><?php printf( _n( '%d tappa', '%d tappe', $n_tappe, 'diario-di-viaggio' ), $n_tappe ); ?></span>
 				<?php endif; ?>
